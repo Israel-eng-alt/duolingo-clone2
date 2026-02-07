@@ -1,51 +1,37 @@
-'use client'
+import LessonPageClient from './LessonPageClient'
 
-import { useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { LessonInterface } from '@/components/LessonInterface'
-import { useLessonStore } from '@/stores/lessonStore'
-import { useUserStore } from '@/stores/userStore'
-import { getLessonExercises } from '@/data/courseData'
-import type { Lesson } from '@/types'
+// Generate static params for all lesson IDs
+export function generateStaticParams() {
+  // Generate lesson IDs for unit 1-1 (Basics 1)
+  const unit1Lessons = [
+    'lesson-1-1-1',
+    'lesson-1-1-2',
+    'lesson-1-1-3',
+    'lesson-1-1-4',
+    'lesson-1-1-5',
+  ]
+  
+  // Generate additional lesson IDs for other units (sections 2 and 3)
+  const additionalLessons = [
+    // Section 2 - Greetings
+    'lesson-2-1-1', 'lesson-2-1-2', 'lesson-2-1-3', 'lesson-2-1-4', 'lesson-2-1-5',
+    'lesson-2-2-1', 'lesson-2-2-2', 'lesson-2-2-3', 'lesson-2-2-4', 'lesson-2-2-5',
+    // Section 3 - Travel
+    'lesson-3-1-1', 'lesson-3-1-2', 'lesson-3-1-3', 'lesson-3-1-4', 'lesson-3-1-5',
+  ]
+  
+  const allLessonIds = [...unit1Lessons, ...additionalLessons]
+  
+  return allLessonIds.map((id) => ({
+    id: id,
+  }))
+}
 
-export default function LessonPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { startLesson, currentLesson } = useLessonStore()
-  const { user } = useUserStore()
-  const lessonId = params.id as string
+interface PageProps {
+  params: Promise<{ id: string }>
+}
 
-  useEffect(() => {
-    // Check if user has hearts (free tier)
-    if (user && user.subscriptionTier === 'free' && user.hearts <= 0) {
-      router.push('/learn')
-      return
-    }
-
-    // Initialize lesson if not already started
-    if (!currentLesson) {
-      // Create a mock lesson for now
-      const mockLesson: Lesson = {
-        id: lessonId,
-        unitId: 'unit-1-1',
-        lessonType: 'standard',
-        title: 'Lesson 1',
-        orderIndex: 0,
-        xpReward: 10,
-        isLegendary: false,
-        estimatedTime: 3,
-      }
-
-      const exercises = getLessonExercises(lessonId)
-      
-      if (exercises.length === 0) {
-        router.push('/learn')
-        return
-      }
-
-      startLesson(mockLesson, exercises, user?.heartsMax || 5)
-    }
-  }, [lessonId, currentLesson, startLesson, user, router])
-
-  return <LessonInterface />
+export default async function LessonPage({ params }: PageProps) {
+  const { id } = await params
+  return <LessonPageClient lessonId={id} />
 }
